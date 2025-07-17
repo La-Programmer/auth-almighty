@@ -3,16 +3,19 @@ name = "auth-almighty"
 version = "0.1.0"
 description = ""
 authors = [
-    {name = "LaProgrammer",email = "justin.ebedi@uricreative.com"}
+    {name = "LaProgrammer",email = "justinoghenekomeebedi@gmail.com"}
 ]
 readme = "README.md"
-requires-python = ">=2.7"
+requires-python = ">=3.9.0"
 dependencies = [
 ]
 
 [tool.poetry]
 packages = [{include = "auth_almighty", from = "src"}]
 
+
+[tool.poetry.group.dev.dependencies]
+pylint = "^3.3.7"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
