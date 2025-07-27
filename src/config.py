@@ -16,6 +16,26 @@ class GoogleConfig(BaseModel):
 
     client_id: Optional[str] = settings.GOOGLE_CLIENT_ID
     client_secret: Optional[str] = settings.GOOGLE_CLIENT_SECRET
+    auth_url: str = (
+        settings.GOOGLE_OAUTH_URL
+        if settings.GOOGLE_OAUTH_URL
+        else "https://accounts.google.com/o/oauth2/v2/auth"
+    )
+    token_url: str = (
+        settings.GOOGLE_TOKEN_URL
+        if settings.GOOGLE_TOKEN_URL
+        else "https://oauth2.googleapis.com/token"
+    )
+    user_data_url: str = (
+        settings.GOOGLE_USER_DATA_URL
+        if settings.GOOGLE_USER_DATA_URL
+        else "https://www.googleapis.com/oauth2/v3/userinfo"
+    )
+    revoke_token_url: str = (
+        settings.GOOGLE_REVOKE_TOKEN_URL
+        if settings.GOOGLE_REVOKE_TOKEN_URL
+        else "https://oauth2.googleapis.com/revoke"
+    )
 
 
 # pylint: disable=too-few-public-methods
