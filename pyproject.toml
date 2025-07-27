@@ -10,8 +10,7 @@ requires-python = ">=3.9.0"
 dependencies = [
     "httpx (>=0.28.1,<0.29.0)",
     "python-dotenv (>=1.1.1,<2.0.0)",
-    "pydantic (>=2.11.7,<3.0.0)",
-    "pydantic-settings (>=2.10.1,<3.0.0)"
+    "pydantic[dotenv,mypy] (>=2.11.7,<3.0.0)",
 ]
 
 [tool.poetry]
@@ -33,9 +32,12 @@ pydantic = {extras = ["mypy"], version = "^2.11.7"}
 [tool.mypy]
 python_version = "3.11"
 strict = true
+disable_error_code = ["misc"]
 ignore_missing_imports = true
 warn_unused_ignores = true
 
+[tool.pylint."MESSAGES CONTROL"]
+disable = ["E1101", "import-error"]
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]

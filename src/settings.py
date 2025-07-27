@@ -2,26 +2,23 @@
 This file handles the dynamic configuration of the project
 """
 
-# ENVIRONMENT VARIABLES (DONE)
-# METHOD ARGUMENTS
-
-# pylint: disable=import-error
-from pydantic_settings import BaseSettings
+import os
+from typing import Optional
 
 
 # pylint: disable=too-few-public-methods
-class Settings(BaseSettings):  # type: ignore[misc]
+class Settings:
     """
     Settings class for global env access.
     """
 
-    GOOGLE_CLIENT_ID: str
-    GOOGLE_CLIENT_SECRET: str
-
-    class Config:
-        """Pydantic config for environment settings."""
-
-        env_file = ".env"
+    GOOGLE_CLIENT_ID: Optional[str] = os.getenv("GOOGLE_CLIENT_ID")
+    GOOGLE_CLIENT_SECRET: Optional[str] = os.getenv("GOOGLE_CLIENT_SECRET")
+    GITHUB_CLIENT_ID: Optional[str] = os.getenv("GITHUB_CLIENT_ID")
+    GITHUB_CLIENT_SECRET: Optional[str] = os.getenv("GITHUB_CLIENT_SECRET")
 
 
 settings = Settings()
+
+
+print("Settings: ", settings.GITHUB_CLIENT_ID)
