@@ -3,6 +3,7 @@ This file contains the Google OAuth2.0 implementation strategy
 """
 
 from src.config import GoogleConfig
+from src.strategies.base_strategy import BaseStrategy
 
 
 class GoogleStrategy:
