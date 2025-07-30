@@ -3,7 +3,11 @@ Base strategy tests
 """
 
 from typing import Optional
+from unittest.mock import AsyncMock, MagicMock
 from urllib.parse import parse_qs, urlparse
+
+import pytest
+from pytest_mock import MockerFixture
 from src.strategies.base_strategy import BaseStrategy
 
 
@@ -57,3 +61,38 @@ class TestBaseStrategy:
         assert param_state == state
         assert param_access_type == access_type
         assert param_prompt == prompt
+
+    @pytest.mark.asyncio
+    async def test_exchange_code_for_token(self, mocker: MockerFixture) -> None:
+        mock_response = MagicMock()
+        mock_response.json.return_value = {
+            "access_token": "abc123",
+            "refresh_token": "123abc",
+        }
+        mock_response.raise_for_status.return_value = None
+
+        mock_post = AsyncMock(return_value=mock_response)
+
+        mock_client = mocker.patch(
+            "src.strategies.base_strategy.httpx.AsyncClient", autospec=True
+        )
+        mock_client.return_value.__aenter__.return_value.post = mock_post
+
+        code = "fake-code"
+
+        result = await self.strategy.exchange_code_for_token(
+            code, "https://redirect-uri"
+        )
+
+        assert result == {"access_token": "abc123", "refresh_token": "123abc"}
+
+        mock_post.assert_called_once_with(
+            "https://redirect-uri",
+            data={
+                "client_id": self.strategy.client_id,
+                "client_secret": self.strategy.client_secret,
+                "code": code,
+                "grant_type": "code",
+                "redirect_uri": "https://redirect-uri",
+            },
+        )

@@ -14,8 +14,12 @@ class GoogleConfig(BaseModel):
     Google config structure
     """
 
-    client_id: Optional[str] = settings.GOOGLE_CLIENT_ID
-    client_secret: Optional[str] = settings.GOOGLE_CLIENT_SECRET
+    client_id: Optional[str] = (
+        settings.GOOGLE_CLIENT_ID if settings.GITHUB_CLIENT_ID else "111"
+    )
+    client_secret: Optional[str] = (
+        settings.GOOGLE_CLIENT_SECRET if settings.GITHUB_CLIENT_SECRET else "000"
+    )
     auth_url: str = (
         settings.GOOGLE_OAUTH_URL
         if settings.GOOGLE_OAUTH_URL
