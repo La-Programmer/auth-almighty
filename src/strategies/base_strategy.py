@@ -39,20 +39,26 @@ class BaseStrategy:
         query_string = urlencode(parameters)
         return f"{self.auth_url}?{query_string}"
 
-
-async def exchange_code_async(
-    code: str, redirect_uri: str, client_id: str, client_secret: str, token_url: str
-) -> dict[str, Any]:
-    data = {
-        "grant_type": "authorization_code",
-        "code": code,
-        "redirect_uri": redirect_uri,
-        "client_id": client_id,
-        "client_secret": client_secret,
-    }
-    async with httpx.AsyncClient() as client:
-        response = await client.post(token_url, data)
-        if response.status_code == 200:
-            return dict(response.json())
-        else:
-            raise RuntimeError("Failed to exchange code for token, status code: 400")
+    async def exchange_code_for_token(
+        self,
+        code: str,
+        redirect_uri: str,
+        client_id: str,
+        client_secret: str,
+        token_url: str,
+    ) -> dict[str, Any]:
+        data = {
+            "grant_type": "authorization_code",
+            "code": code,
+            "redirect_uri": redirect_uri,
+            "client_id": client_id,
+            "client_secret": client_secret,
+        }
+        async with httpx.AsyncClient() as client:
+            response = await client.post(token_url, data)
+            if response.status_code == 200:
+                return dict(response.json())
+            else:
+                raise RuntimeError(
+                    "Failed to exchange code for token, status code: 400"
+                )

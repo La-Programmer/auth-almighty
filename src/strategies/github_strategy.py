@@ -31,12 +31,15 @@ class GithubStrategy(BaseStrategy):
         )
 
     async def exchange_code_for_token(
-        code: str, redirect_uri: str, client_id: str, client_secret: str, token_url: str
-    ) -> str:
-        return str(
-            super().exchange_code_for_token(
-                redirect_uri, client_id, client_secret, token_url
-            )
+        self,
+        code: str,
+        redirect_uri: str,
+        client_id: str,
+        client_secret: str,
+        token_url: str,
+    ) -> dict[str, Any]:
+        return await super().exchange_code_for_token(
+            code, redirect_uri, client_id, client_secret, token_url
         )
 
 
