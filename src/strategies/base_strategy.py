@@ -42,4 +42,4 @@ class BaseStrategy:
         return f"{self.auth_url}?{query_string}"
 
     async def exchange_code_for_token(self, code: str, redirect_uri: str) -> Any:
-        return ""
+        pass

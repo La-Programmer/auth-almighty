@@ -81,7 +81,7 @@ class TestBaseStrategy:
         code = "fake-code"
 
         result = await self.strategy.exchange_code_for_token(
-            code, "https://redirect-uri"
+            code, redirect_uri="https://redirect-uri"
         )
 
         assert result == {"access_token": "abc123", "refresh_token": "123abc"}
@@ -93,6 +93,5 @@ class TestBaseStrategy:
                 "client_secret": self.strategy.client_secret,
                 "code": code,
                 "grant_type": "code",
-                "redirect_uri": "https://redirect-uri",
             },
         )
