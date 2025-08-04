@@ -1,16 +1,16 @@
-from typing import Any
+from typing import Any, Optional
 from urllib.parse import urlencode
 
 
 class BaseStrategy:
     def __init__(
         self,
-        client_id: str,
-        client_secret: str,
+        client_id: Optional[str],
+        client_secret: Optional[str],
         auth_url: str,
         token_url: str,
         user_data_url: str,
-        revoke_token_url: str,
+        revoke_token_url: Optional[str] = None,
     ):
         self.client_id = client_id
         self.client_secret = client_secret

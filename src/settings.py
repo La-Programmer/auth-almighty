@@ -20,6 +20,9 @@ class Settings:
     GOOGLE_REVOKE_TOKEN_URL: Optional[str] = os.getenv("GOOGLE_REVOKE_TOKEN_URL")
     GITHUB_CLIENT_ID: Optional[str] = os.getenv("GITHUB_CLIENT_ID")
     GITHUB_CLIENT_SECRET: Optional[str] = os.getenv("GITHUB_CLIENT_SECRET")
+    GITHUB_AUTH_URL: Optional[str] = os.getenv("GITHUB_AUTH_URL")
+    GITHUB_TOKEN_URL: Optional[str] = os.getenv("GITHUB_TOKEN_URL")
+    GITHUB_USER_DATA_URL: Optional[str] = os.getenv("GITHUB_USER_DATA_URL")
 
 
 settings = Settings()

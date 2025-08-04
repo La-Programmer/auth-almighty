@@ -46,6 +46,21 @@ class GithubConfig(BaseModel):
 
     client_id: Optional[str] = settings.GITHUB_CLIENT_ID
     client_secret: Optional[str] = settings.GITHUB_CLIENT_SECRET
+    auth_url: str = (
+        settings.GITHUB_AUTH_URL
+        if settings.GITHUB_AUTH_URL
+        else "https://github.com/login/oauth/authorize"
+    )
+    token_url: str = (
+        settings.GITHUB_TOKEN_URL
+        if settings.GITHUB_TOKEN_URL
+        else "https://github.com/login/oauth/access_token"
+    )
+    user_data_url: str = (
+        settings.GITHUB_USER_DATA_URL
+        if settings.GITHUB_USER_DATA_URL
+        else "https://api.github.com/user"
+    )
 
 
 # pylint: disable=too-few-public-methods
