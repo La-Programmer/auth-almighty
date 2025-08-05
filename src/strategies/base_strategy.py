@@ -1,7 +1,10 @@
-from http.client import HTTPException
+import json
 from typing import Any, Optional
 from urllib.parse import urlencode
 import httpx
+from pydantic import ValidationError
+
+from src.domain.responses.responses import TokenResponse
 
 
 class BaseStrategy:
@@ -14,7 +17,7 @@ class BaseStrategy:
         user_data_url: Optional[str],
         revoke_token_url: Optional[str],
     ):
-        if not client_id or client_secret:
+        if not client_id or not client_secret:
             raise ValueError("Client ID or Client Secret is missing")
         self.client_id = client_id
         self.client_secret = client_secret
@@ -47,22 +50,26 @@ class BaseStrategy:
         self,
         code: str,
         redirect_uri: str,
-        client_id: str,
-        client_secret: str,
-        token_url: str,
     ) -> dict[str, Any]:
         data = {
             "grant_type": "authorization_code",
             "code": code,
             "redirect_uri": redirect_uri,
-            "client_id": client_id,
-            "client_secret": client_secret,
+            "client_id": self.client_id,
+            "client_secret": self.client_secret,
         }
         async with httpx.AsyncClient() as client:
-            response = await client.post(token_url, data)
-            if response.status_code == 200:
-                return dict(response.json())
-            else:
-                raise RuntimeError(
-                    "Failed to exchange code for token, status code: 400"
-                )
+            response = await client.post(self.token_url, data)
+            response.raise_for_status()
+
+            try:
+                json_data = response.json()
+            except ValueError:
+                raise RuntimeError("Response was not valid JSON.")
+
+            try:
+                token_data = TokenResponse(**json_data)
+            except ValidationError as ve:
+                raise RuntimeError(f"Token response structure invalid: {ve}")
+
+            return dict(token_data.model_dump(exclude_none=True))

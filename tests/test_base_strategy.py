@@ -8,6 +8,7 @@ from urllib.parse import parse_qs, urlparse
 
 import pytest
 from pytest_mock import MockerFixture
+from src.domain.enums.enums import GrantTypeEnum
 from src.strategies.base_strategy import BaseStrategy
 
 
@@ -66,6 +67,7 @@ class TestBaseStrategy:
     async def test_exchange_code_for_token(self, mocker: MockerFixture) -> None:
         mock_response = MagicMock()
         mock_response.json.return_value = {
+            "token_type": "Bearer",
             "access_token": "abc123",
             "refresh_token": "123abc",
         }
@@ -84,14 +86,19 @@ class TestBaseStrategy:
             code, redirect_uri="https://redirect-uri"
         )
 
-        assert result == {"access_token": "abc123", "refresh_token": "123abc"}
+        assert result == {
+            "token_type": "Bearer",
+            "access_token": "abc123",
+            "refresh_token": "123abc",
+        }
 
         mock_post.assert_called_once_with(
-            "https://redirect-uri",
-            data={
-                "client_id": self.strategy.client_id,
-                "client_secret": self.strategy.client_secret,
-                "code": code,
-                "grant_type": "code",
+            "test-token-url",
+            {
+                "grant_type": GrantTypeEnum.AUTHORIZATION_CODE,
+                "code": "fake-code",
+                "redirect_uri": "https://redirect-uri",
+                "client_id": "test-client-id",
+                "client_secret": "test-client-secret",
             },
         )
