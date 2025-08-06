@@ -14,7 +14,7 @@ dependencies = [
 ]
 
 [tool.poetry]
-packages = [{include = "auth_almighty", from = "src"}]
+packages = [{include = "*", from = "src"}]
 
 
 [tool.poetry.group.dev.dependencies]
