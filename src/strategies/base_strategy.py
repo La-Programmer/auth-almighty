@@ -1,13 +1,14 @@
-import json
+from abc import ABC
 from typing import Any, Optional
 from urllib.parse import urlencode
 import httpx
 from pydantic import ValidationError
 
+from src.domain.helpers.response import ResponseHelper
 from src.domain.responses.responses import TokenResponse
 
 
-class BaseStrategy:
+class BaseStrategy(ABC):
     def __init__(
         self,
         client_id: Optional[str],
@@ -59,17 +60,24 @@ class BaseStrategy:
             "client_secret": self.client_secret,
         }
         async with httpx.AsyncClient() as client:
-            response = await client.post(self.token_url, data)
+            response: httpx.Response = await client.post(self.token_url, data)
             response.raise_for_status()
 
-            try:
-                json_data = response.json()
-            except ValueError:
-                raise RuntimeError("Response was not valid JSON.")
+            return ResponseHelper.process_incoming_network_response(
+                response, TokenResponse
+            )
 
-            try:
-                token_data = TokenResponse(**json_data)
-            except ValidationError as ve:
-                raise RuntimeError(f"Token response structure invalid: {ve}")
+    async def revoke_token(self, token: str) -> Any:
+        if not hasattr(self, "revoke_token_url"):
+            raise NotImplementedError(
+                "Revoke token URL is not defined for this strategy."
+            )
 
-            return dict(token_data.model_dump(exclude_none=True))
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                self.revoke_token_url,
+                headers={"Authorization": f"Bearer {token}"},
+            )
+            response.raise_for_status()
+
+            return ResponseHelper.process_incoming_network_response(response)

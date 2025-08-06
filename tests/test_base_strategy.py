@@ -2,10 +2,11 @@
 Base strategy tests
 """
 
-from typing import Optional
+from typing import Any, Optional
 from unittest.mock import AsyncMock, MagicMock
 from urllib.parse import parse_qs, urlparse
 
+import httpx
 import pytest
 from pytest_mock import MockerFixture
 from src.domain.enums.enums import GrantTypeEnum
@@ -25,6 +26,51 @@ class TestBaseStrategy:
             user_data_url="test-user-data-url",
             revoke_token_url="test-revoke-token-url",
         )
+
+    def _mock_successful_httpx_response(
+        self, mocker: MockerFixture, response_data: dict[str, Any]
+    ) -> AsyncMock:
+        mock_response = MagicMock()
+        mock_response.json.return_value = response_data
+        mock_response.raise_for_status.return_value = None
+
+        mock_post = AsyncMock(return_value=mock_response)
+
+        mock_client = mocker.patch(
+            "src.strategies.base_strategy.httpx.AsyncClient", autospec=True
+        )
+        mock_client.return_value.__aenter__.return_value.post = mock_post
+
+        return mock_post
+
+    def _mock_bad_request_httpx_response(
+        self, mocker: MockerFixture, expected_exception: BaseException
+    ) -> AsyncMock:
+        mock_response = MagicMock()
+        mock_response.raise_for_status.side_effect = expected_exception
+
+        mock_post = AsyncMock(return_value=mock_response)
+        mock_client = mocker.patch(
+            "src.strategies.base_strategy.httpx.AsyncClient", autospec=True
+        )
+        mock_client.return_value.__aenter__.return_value.post = mock_post
+
+        return mock_post
+
+    def _mock_invalid_json_response(
+        self, mocker: MockerFixture, expected_exception: BaseException
+    ) -> AsyncMock:
+        mock_response = MagicMock()
+        mock_response.raise_for_status.return_value = None
+        mock_response.json.side_effect = expected_exception
+
+        mock_post = AsyncMock(return_value=mock_response)
+        mock_client = mocker.patch(
+            "src.strategies.base_strategy.httpx.AsyncClient", autospec=True
+        )
+        mock_client.return_value.__aenter__.return_value.post = mock_post
+
+        return mock_post
 
     def test_generate_url(self) -> None:
         scope = "openid email"
@@ -65,20 +111,13 @@ class TestBaseStrategy:
 
     @pytest.mark.asyncio
     async def test_exchange_code_for_token(self, mocker: MockerFixture) -> None:
-        mock_response = MagicMock()
-        mock_response.json.return_value = {
+        expected_response = {
             "token_type": "Bearer",
             "access_token": "abc123",
             "refresh_token": "123abc",
         }
-        mock_response.raise_for_status.return_value = None
 
-        mock_post = AsyncMock(return_value=mock_response)
-
-        mock_client = mocker.patch(
-            "src.strategies.base_strategy.httpx.AsyncClient", autospec=True
-        )
-        mock_client.return_value.__aenter__.return_value.post = mock_post
+        mock_post = self._mock_successful_httpx_response(mocker, expected_response)
 
         code = "fake-code"
 
@@ -86,11 +125,7 @@ class TestBaseStrategy:
             code, redirect_uri="https://redirect-uri"
         )
 
-        assert result == {
-            "token_type": "Bearer",
-            "access_token": "abc123",
-            "refresh_token": "123abc",
-        }
+        assert result == expected_response
 
         mock_post.assert_called_once_with(
             "test-token-url",
@@ -102,3 +137,74 @@ class TestBaseStrategy:
                 "client_secret": "test-client-secret",
             },
         )
+
+    @pytest.mark.asyncio
+    async def test_exchange_code_for_token_failure_case(
+        self, mocker: MockerFixture
+    ) -> None:
+        expected_exception = httpx.HTTPStatusError(
+            "Bad Request", request=MagicMock(), response=MagicMock(status_code=400)
+        )
+
+        self._mock_bad_request_httpx_response(mocker, expected_exception)
+
+        code = "2443rrfrttg"
+        redirect_uri = "test-redirect-uri"
+
+        with pytest.raises(httpx.HTTPStatusError):
+            await self.strategy.exchange_code_for_token(code, redirect_uri)
+
+    @pytest.mark.asyncio
+    async def test_exchange_code_for_invalid_json_case(
+        self, mocker: MockerFixture
+    ) -> None:
+        expected_exception = RuntimeError("Response was not valid JSON.")
+
+        self._mock_invalid_json_response(mocker, expected_exception)
+
+        code = "2443rrfrttg"
+        redirect_uri = "test-redirect-uri"
+
+        with pytest.raises(RuntimeError):
+            await self.strategy.exchange_code_for_token(code, redirect_uri)
+
+    @pytest.mark.asyncio
+    async def test_revoke_token(self, mocker: MockerFixture) -> None:
+        token = "test-token"
+        expected_response = {
+            "status": "true",
+            "message": "Token revoked successfully",
+        }
+
+        mock_post = self._mock_successful_httpx_response(mocker, expected_response)
+
+        result = await self.strategy.revoke_token(token)
+        assert result == expected_response
+
+        mock_post.assert_called_once_with(
+            "test-revoke-token-url",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+
+    @pytest.mark.asyncio
+    async def test_revoke_token_bad_request(self, mocker: MockerFixture) -> None:
+        token = "test-token"
+        expected_exception = httpx.HTTPStatusError(
+            "Bad Request", request=MagicMock(), response=MagicMock(status_code=400)
+        )
+
+        self._mock_bad_request_httpx_response(mocker, expected_exception)
+
+        with pytest.raises(httpx.HTTPStatusError):
+            await self.strategy.revoke_token(token)
+
+    @pytest.mark.asyncio
+    async def test_revoke_token_invalid_json(self, mocker: MockerFixture) -> None:
+        token = "test_token"
+
+        expected_exception = RuntimeError("Response was not valid JSON")
+
+        self._mock_invalid_json_response(mocker, expected_exception)
+
+        with pytest.raises(RuntimeError):
+            await self.strategy.revoke_token(token)
