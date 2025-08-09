@@ -3,16 +3,41 @@ name = "auth-almighty"
 version = "0.1.0"
 description = ""
 authors = [
-    {name = "LaProgrammer",email = "justin.ebedi@uricreative.com"}
+    {name = "LaProgrammer",email = "justinoghenekomeebedi@gmail.com"}
 ]
 readme = "README.md"
-requires-python = ">=2.7"
+requires-python = ">=3.9.0"
 dependencies = [
+    "httpx (>=0.28.1,<0.29.0)",
+    "python-dotenv (>=1.1.1,<2.0.0)",
+    "pydantic[dotenv,mypy] (>=2.11.7,<3.0.0)",
 ]
 
 [tool.poetry]
-packages = [{include = "auth_almighty", from = "src"}]
+packages = [{include = "*", from = "src"}]
 
+
+[tool.poetry.group.dev.dependencies]
+pylint = "^3.3.7"
+pre-commit = "^4.2.0"
+mypy = "^1.17.0"
+pytest = "^8.4.1"
+pytest-asyncio = "^1.1.0"
+pytest-mock = "^3.14.1"
+coverage = "^7.9.2"
+httpx = {extras = ["http2"], version = "^0.28.1"}
+respx = "^0.22.0"
+pydantic = {extras = ["mypy"], version = "^2.11.7"}
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+disable_error_code = ["misc"]
+ignore_missing_imports = true
+warn_unused_ignores = true
+
+[tool.pylint."MESSAGES CONTROL"]
+disable = ["E1101", "import-error"]
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
